@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  osrm-backend:
+    image: osrm/osrm-backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - "./osrm/:/data" # This maps your current directory to /data inside the container
+    command: osrm-routed --algorithm mld /data/pais-vasco-latest.osrm
+    stdin_open: true # Equivalent to -i
+    tty: true        # Equivalent to -t
