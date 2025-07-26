@@ -217,12 +217,22 @@ const ExcelProcessor = ({ city }: { city: string|null }) => {
   return (
     <div>
       <Upload {...uploaderProps}>
-        <Button type="primary" icon={<UploadOutlined />}>
+        <Button
+          type={tableData.length > 0 ? 'default' : 'primary'}
+          icon={<UploadOutlined />}
+        >
           Aukeratu Excel fitxategi originala
         </Button>
       </Upload>
+      <Button
+        onClick={handleDownloadSelected}
+        style={{ marginLeft: '10px' }}
+        disabled={selectedRowKeys.length === 0}
+      >
+        Deskargatu hautatutako errenkadak
+      </Button>
 
-      <div style={{ marginTop: "20px" }}>
+      <div style={{ marginTop: '20px' }}>
         {loading ? (
           <Spin tip="Datuak kargatzen..." />
         ) : tableData.length > 0 ? (
@@ -237,16 +247,9 @@ const ExcelProcessor = ({ city }: { city: string|null }) => {
               rowSelection={rowSelection}
               dataSource={tableData}
               columns={finalColumns}
-              scroll={{ x: "max-content" }}
+              scroll={{ x: 'max-content' }}
               size="small"
             />
-            <Button
-              onClick={handleDownloadSelected}
-              style={{ marginLeft: "10px" }}
-              disabled={selectedRowKeys.length === 0}
-            >
-              Deskargatu hautatutako errenkadak
-            </Button>
           </>
         ) : (
           <p>Hemen agertuko da taula.</p>

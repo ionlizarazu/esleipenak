@@ -9,7 +9,11 @@ import schools from "./assets/schools.json";
 import { useState } from "react";
 import { Marker, Popup, MapContainer, TileLayer } from "react-leaflet";
 import { Content, Header } from "antd/es/layout/layout";
-
+import L from 'leaflet';
+import icon from 'leaflet/dist/images/marker-icon.png';
+import {
+  ArrowLeftOutlined,
+} from '@ant-design/icons';
 function formatString(value: string): string {
   let formattedValue = value
     .toLowerCase()
@@ -23,7 +27,9 @@ function App() {
   const [selected, setSelected] = useState(null as string | null);
   const [current, setCurrent] = useState(0);
 
-
+  let DefaultIcon = L.icon({
+    iconUrl: icon,
+  });
   const steps = [
     {
       title: "Azalpen laburra",
@@ -95,11 +101,9 @@ function App() {
                         h.geometry.coordinates[1],
                         h.geometry.coordinates[0],
                       ]}
+                      icon={DefaultIcon}
                     >
-                      <Popup>
-                        {h.properties.name}
-
-                      </Popup>
+                      <Popup>{h.properties.name}</Popup>
                     </Marker>
                   );
                 })}
@@ -118,7 +122,11 @@ function App() {
                 />
                 {schools.map((h, key) => {
                   return (
-                    <Marker key={key} position={[h.lat, h.lon]}>
+                    <Marker
+                      key={key}
+                      position={[h.lat, h.lon]}
+                      icon={DefaultIcon}
+                    >
                       <Popup>
                         {h.name}
                         <br />
@@ -162,45 +170,6 @@ function App() {
           >
             Hurrengo pausura jo
           </Button>
-          <div className="map-container">
-            <h2>Erabilgarri dauden herriak mapan</h2>
-            <MapContainer
-              center={[43.0985864, -2.3811024]}
-              zoom={9}
-              scrollWheelZoom={false}
-              style={{ height: "800px" }}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              {herriak.features.map((h, key) => {
-                return (
-                  <Marker
-                    key={key}
-                    position={[
-                      h.geometry.coordinates[1],
-                      h.geometry.coordinates[0],
-                    ]}
-                  >
-                    <Popup>
-                      {h.properties.name}
-                      <br />
-                      <Button
-                        type="primary"
-                        onClick={() =>
-                          setSelected(formatString(h.properties.name))
-                        }
-                      >
-                        Aukeratu
-                      </Button>
-                    </Popup>
-                  </Marker>
-                );
-              })}
-            </MapContainer>
-          </div>
-          <br />
         </div>
       ),
     },
@@ -211,31 +180,6 @@ function App() {
           <h2>Igo fitxategia</h2>
 
           <ExcelProcessor city={selected}></ExcelProcessor>
-
-          <h2>Ikastetxeak Mapan (Open Data Euskadiko datuetatik)</h2>
-          <div className="map-container">
-            <MapContainer
-              center={[43.0985864, -2.3811024]}
-              zoom={9}
-              scrollWheelZoom={false}
-              style={{ height: "800px" }}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              {schools.map((h, key) => {
-                return (
-                  <Marker key={key} position={[h.lat, h.lon]}>
-                    <Popup>
-                      {h.name}
-                      <br />
-                    </Popup>
-                  </Marker>
-                );
-              })}
-            </MapContainer>
-          </div>
         </div>
       ),
     },
@@ -254,28 +198,32 @@ function App() {
       <Layout>
         <Header
           style={{
-            color: "#fff",
+            color: '#fff',
             height: 64,
             paddingInline: 48,
-            lineHeight: "64px",
-            display: "flex",
-            alignItems: "center",
+            lineHeight: '64px',
+            display: 'flex',
+            alignItems: 'center',
           }}
         >
           <h1>Esleipenak</h1>
         </Header>
         <Content
-          style={{ padding: "0 50px", minHeight: "80vh", textAlign: "center" }}
+          style={{ padding: '0 50px', minHeight: '95vh', textAlign: 'center' }}
         >
-          <div style={{ margin: "2rem 0 2rem 0" }}>
+          <div style={{ margin: '2rem 0 2rem 0' }}>
             {current > 0 && (
-              <Button style={{ margin: "0 8px" }} onClick={() => prev()}>
+              <Button
+                style={{ margin: '0 8px' }}
+                onClick={() => prev()}
+                icon={<ArrowLeftOutlined />}
+              >
                 Aurreko pausura itzuli
               </Button>
             )}
           </div>
           <Steps
-            style={{ maxWidth: "50%", margin: "0 auto" }}
+            style={{ maxWidth: '50%', margin: '0 auto' }}
             current={current}
             items={items}
           />
