@@ -82,7 +82,7 @@ function App() {
               <p>
                 Mapa honetan daude ikusgai hurrengo orrian aukeragai agertzen
                 diren herriak. Hauek lortzeko Overpass turbo erabili dugu,
-                zehazki <a href="https://overpass-turbo.eu/s/28z5">query hau</a>
+                zehazki <a href="https://overpass-turbo.eu/s/28z5">query hau</a>{' '}
                 erabili dugu.
               </p>
               <MapContainer
