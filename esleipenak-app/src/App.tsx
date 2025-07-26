@@ -1,24 +1,22 @@
-import { Button, Layout, Select, Steps } from "antd";
-import unidecode from "unidecode";
-import "leaflet/dist/leaflet.css";
+import { Button, Layout, Select, Steps } from 'antd';
+import unidecode from 'unidecode';
+import 'leaflet/dist/leaflet.css';
 
-import "./App.css";
-import ExcelProcessor from "./ExcelProcessor";
-import herriak from "./assets/cities.json";
-import schools from "./assets/schools.json";
-import { useState } from "react";
-import { Marker, Popup, MapContainer, TileLayer } from "react-leaflet";
-import { Content, Header } from "antd/es/layout/layout";
+import './App.css';
+import ExcelProcessor from './ExcelProcessor';
+import herriak from './assets/cities.json';
+import schools from './assets/schools.json';
+import { useState } from 'react';
+import { Marker, Popup, MapContainer, TileLayer } from 'react-leaflet';
+import { Content, Footer, Header } from 'antd/es/layout/layout';
 import L from 'leaflet';
 import icon from 'leaflet/dist/images/marker-icon.png';
-import {
-  ArrowLeftOutlined,
-} from '@ant-design/icons';
+import { ArrowLeftOutlined, GithubOutlined } from '@ant-design/icons';
 function formatString(value: string): string {
   let formattedValue = value
     .toLowerCase()
-    .replace(/ /g, "-")
-    .replace(/\//g, "-");
+    .replace(/ /g, '-')
+    .replace(/\//g, '-');
   formattedValue = unidecode(formattedValue);
 
   return formattedValue;
@@ -32,16 +30,13 @@ function App() {
   });
   const steps = [
     {
-      title: "Azalpen laburra",
+      title: 'Azalpen laburra',
       content: (
         <>
           <div
-            className=""
             style={{
-              maxWidth: "50%",
-              margin: "0 auto",
-              fontSize: "1.2rem",
-              textAlign: "left",
+              maxWidth: '50%',
+              margin: '0 auto',
             }}
           >
             <h2>Azalpen laburra</h2>
@@ -67,15 +62,15 @@ function App() {
             </p>
             <p>
               Kode irekiko tresna izanik, berau hobetzen laguntzeko, hemen
-              helbidea{" "}
-              <a href="https://www.github.com/ilizarazu/esleipenak">
+              helbidea{' '}
+              <a href="https://www.github.com/ionlizarazu/esleipenak">
                 Esleipenak github
               </a>
               .
             </p>
             <Button
               type="primary"
-              style={{ margin: "0 0 25px 0" }}
+              style={{ margin: '0 0 25px 0' }}
               onClick={() => next()}
             >
               Probatu dezagun!
@@ -83,11 +78,18 @@ function App() {
           </div>
           <div className="maps-container">
             <div className="map-container">
+              <h2>Herrien zerrenda</h2>
+              <p>
+                Mapa honetan daude ikusgai hurrengo orrian aukeragai agertzen
+                diren herriak. Hauek lortzeko Overpass turbo erabili dugu,
+                zehazki <a href="https://overpass-turbo.eu/s/28z5">query hau</a>
+                erabili dugu.
+              </p>
               <MapContainer
                 center={[43.0985864, -2.3811024]}
                 zoom={9}
                 scrollWheelZoom={false}
-                style={{ height: "800px" }}
+                style={{ height: '800px' }}
               >
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -108,13 +110,23 @@ function App() {
                   );
                 })}
               </MapContainer>
-              </div>
-              <div className="map-container">
+            </div>
+            <div className="map-container">
+              <h2>Ikastetxeen zerrenda</h2>
+              <p>
+                Denboren kalkuluak egiteko erabili dugun ikastetxeen
+                informaziotik erauzitako mapa da hau. Hauek lortzeko Open Data
+                Euskadiko datueak erabili dugu, zehazki{' '}
+                <a href="https://opendata.euskadi.eus/katalogoa/-/unibertsitatez-kanpoko-ikastetxeak/">
+                  helbideko datuak
+                </a>{' '}
+                erabili dugu.
+              </p>
               <MapContainer
                 center={[43.0985864, -2.3811024]}
                 zoom={9}
                 scrollWheelZoom={false}
-                style={{ height: "800px" }}
+                style={{ height: '800px' }}
               >
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -141,7 +153,7 @@ function App() {
       ),
     },
     {
-      title: "Nondik irtengo zara?",
+      title: 'Nondik irtengo zara?',
       content: (
         <div className="">
           <h2>Zein herritatik irtengo zara lanera joateko?</h2>
@@ -159,12 +171,12 @@ function App() {
               .sort((a, b) => a.value.localeCompare(b.value))}
             onSelect={(value) => setSelected(value)}
             size="large"
-            style={{ margin: "0 0 25px 0", minWidth: "200px" }}
+            style={{ margin: '0 0 25px 0', minWidth: '200px' }}
           />
           <br />
           <Button
             type="primary"
-            style={{ margin: "0 0 25px 0" }}
+            style={{ margin: '0 0 25px 0' }}
             disabled={!selected}
             onClick={() => next()}
           >
@@ -174,7 +186,7 @@ function App() {
       ),
     },
     {
-      title: "Igo fitxategia",
+      title: 'Igo fitxategia',
       content: (
         <div className="">
           <h2>Igo fitxategia</h2>
@@ -229,6 +241,35 @@ function App() {
           />
           <div>{steps[current].content}</div>
         </Content>
+        <Footer
+          style={{
+            textAlign: 'center',
+            backgroundColor: '#000',
+            color: '#fff',
+          }}
+        >
+          <GithubOutlined /> Garapenean:
+          <a
+            href="https://github.com/ionlizarazu"
+            style={{ color: '#fff', textDecoration: 'underline' }}
+          >
+            @ionlizarazu
+          </a>
+          {' eta '}
+          <a
+            href="https://github.com/erral"
+            style={{ color: '#fff', textDecoration: 'underline' }}
+          >
+            @erral
+          </a>
+          {' | '}
+          <a
+            href="https://github.com/ionlizarazu/esleipenak"
+            style={{ color: '#fff', textDecoration: 'underline' }}
+          >
+            Github-eko repositorioa
+          </a>
+        </Footer>
       </Layout>
     </>
   );

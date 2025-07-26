@@ -13,7 +13,10 @@
 body {
   margin: 0;
 }
-
+p {
+  font-size: 1.2rem;
+  text-align: left;
+}
 .maps-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
