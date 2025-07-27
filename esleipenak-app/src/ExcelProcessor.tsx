@@ -18,14 +18,18 @@ import {
 } from './utils';
 import type { UploadChangeParam } from 'antd/lib/upload';
 import type { ColumnsType } from 'antd/es/table';
-import type { EditableColumnType, TableRow } from './interfaces';
+import type {
+  EditableColumnType,
+  TableFilter,
+  TableRow,
+} from './interfaces';
 import { EditableCell, EditableRow } from './EditableComponents';
 type TableRowSelection<T extends object = object> =
   TableProps<T>['rowSelection'];
 
 const ExcelProcessor = ({ city }: { city: string | null }) => {
   const [tableData, setTableData] = useState<TableRow[]>([]);
-  const [tableFilters, setTableFilters] = useState<object>({});
+  const [tableFilters, setTableFilters] = useState<TableFilter>({});
   const [tableColumns, setTableColumns] = useState<ColumnsType<TableRow>>([]);
   const [distances, setDistances] = useState<CityData[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -122,18 +126,15 @@ const ExcelProcessor = ({ city }: { city: string | null }) => {
       setTableFilters(
         Object.keys(processedData[0])
           .filter((key) => key !== 'key')
-          .reduce((acc,k) => {
-            acc[k]={
-              placeholder: k,
-              options: processedData
-                .map((item) => item[k])
+          .reduce((acc: TableFilter, k) => {
+            acc[k] =processedData
+                .map((item: TableRow) => item[k])
                 .filter(onlyUnique)
                 .sort()
                 .map((item) => ({
                   text: String(item),
                   value: String(item),
-                })),
-            };
+                }));
             return acc;
           }, {}),
       );
@@ -208,9 +209,9 @@ const ExcelProcessor = ({ city }: { city: string | null }) => {
       ...row,
     });
     if (row.aukeratutakoOrdena && row.aukeratutakoOrdena !== '') {
-      setSelectedRowKeys((prev)=>[...prev, row.key]);
-    }else if(row.aukeratutakoOrdena === ''){
-      setSelectedRowKeys((prev)=>prev.filter((key)=>key!==row.key));
+      setSelectedRowKeys((prev) => {return row.key? [...prev, row.key] : prev});
+    } else if (row.aukeratutakoOrdena === '') {
+      setSelectedRowKeys((prev) => prev.filter((key) => key !== row.key));
     }
     setTableData(newData);
   };
@@ -255,7 +256,7 @@ const ExcelProcessor = ({ city }: { city: string | null }) => {
       </Upload>
       <Button
         icon={<DownloadOutlined />}
-        type='primary'
+        type="primary"
         onClick={handleDownloadSelected}
         style={{ marginLeft: '10px' }}
         disabled={selectedRowKeys.length === 0}

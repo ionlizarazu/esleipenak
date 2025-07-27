@@ -1,5 +1,5 @@
 import type { ColumnsType } from 'antd/es/table';
-import type { EditableColumnType, TableRow } from './interfaces';
+import type { EditableColumnType, TableFilter, TableRow } from './interfaces';
 
 export interface CityData {
   code: string;
@@ -39,7 +39,7 @@ function onlyUnique(
 
 const generateTableColumns = (
   data: TableRow[],
-  tableFilters,
+  tableFilters: TableFilter,
 ): ColumnsType<TableRow> => {
   if (!data || data.length === 0) {
     return [];
@@ -64,7 +64,7 @@ const generateTableColumns = (
         dataIndex: key,
         key: key,
         filterSearch: true,
-        filters:filters?.options,
+        filters:filters,
         onFilter: (value, record) => {
           return (
             record[key]

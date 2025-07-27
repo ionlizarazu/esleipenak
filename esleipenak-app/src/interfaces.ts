@@ -1,4 +1,4 @@
-import type { ColumnType } from "antd/es/table";
+import type { ColumnType } from 'antd/es/table';
 
 export interface TableRow {
   key: string | number | undefined;
@@ -18,6 +18,15 @@ interface Item {
 }
 export interface EditableRowProps {
   index: number;
+}
+
+export interface TableFilterItem {
+  text: string;
+  value: string;
+}
+
+export interface TableFilter {
+  [key: string]: TableFilterItem[];
 }
 export interface EditableCellProps {
   title: React.ReactNode;
