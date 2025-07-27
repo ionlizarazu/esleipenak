@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Table,
   Spin,
@@ -7,19 +7,25 @@ import {
   message,
   type UploadFile,
   type TableProps,
-} from "antd";
-import { UploadOutlined } from "@ant-design/icons";
-import * as XLSX from "xlsx";
-import { generateTableColumns, processCity, type CityData } from "./utils";
-import type { UploadChangeParam } from "antd/lib/upload";
-import type { ColumnsType } from "antd/es/table";
-import type { EditableColumnType, TableRow } from "./interfaces";
-import { EditableCell, EditableRow } from "./EditableComponents";
+} from 'antd';
+import { UploadOutlined, DownloadOutlined } from '@ant-design/icons';
+import * as XLSX from 'xlsx';
+import {
+  generateTableColumns,
+  onlyUnique,
+  processCity,
+  type CityData,
+} from './utils';
+import type { UploadChangeParam } from 'antd/lib/upload';
+import type { ColumnsType } from 'antd/es/table';
+import type { EditableColumnType, TableRow } from './interfaces';
+import { EditableCell, EditableRow } from './EditableComponents';
 type TableRowSelection<T extends object = object> =
-  TableProps<T>["rowSelection"];
+  TableProps<T>['rowSelection'];
 
-const ExcelProcessor = ({ city }: { city: string|null }) => {
+const ExcelProcessor = ({ city }: { city: string | null }) => {
   const [tableData, setTableData] = useState<TableRow[]>([]);
+  const [tableFilters, setTableFilters] = useState<object>({});
   const [tableColumns, setTableColumns] = useState<ColumnsType<TableRow>>([]);
   const [distances, setDistances] = useState<CityData[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -40,7 +46,7 @@ const ExcelProcessor = ({ city }: { city: string|null }) => {
 
   useEffect(() => {
     if (tableData.length > 0) {
-      setTableColumns(generateTableColumns(tableData));
+      setTableColumns(generateTableColumns(tableData, tableFilters));
     } else {
       setTableColumns([]);
     }
@@ -51,18 +57,18 @@ const ExcelProcessor = ({ city }: { city: string|null }) => {
   type ReadArrayBuffer = Blob & UploadFile;
 
   const readExcelFile = async (
-    file: UploadFile
+    file: UploadFile,
   ): Promise<ReadExcelFileType> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: "array" });
+          const workbook = XLSX.read(data, { type: 'array' });
           const sheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[sheetName];
           let headerRow = 0;
-          const range = XLSX.utils.decode_range(worksheet["!ref"] ?? "");
+          const range = XLSX.utils.decode_range(worksheet['!ref'] ?? '');
 
           for (let R = range.s.r; R <= range.e.r; ++R) {
             const cellAddress = XLSX.utils.encode_cell({ r: R, c: 0 });
@@ -71,7 +77,7 @@ const ExcelProcessor = ({ city }: { city: string|null }) => {
               worksheet[cellAddress] &&
               worksheet[cellAddress].v !== undefined &&
               worksheet[cellAddress].v !== null &&
-              String(worksheet[cellAddress].v).trim() !== ""
+              String(worksheet[cellAddress].v).trim() !== ''
             ) {
               headerRow = R;
 
@@ -80,7 +86,7 @@ const ExcelProcessor = ({ city }: { city: string|null }) => {
           }
 
           const newRange = { s: { r: headerRow, c: range.s.c }, e: range.e };
-          worksheet["!ref"] = XLSX.utils.encode_range(newRange);
+          worksheet['!ref'] = XLSX.utils.encode_range(newRange);
           const jsonData = XLSX.utils.sheet_to_json(worksheet, {
             header: headerRow,
           });
@@ -101,9 +107,9 @@ const ExcelProcessor = ({ city }: { city: string|null }) => {
     try {
       const data = await readExcelFile(file);
       const processedData = data.map((item, index) => {
-        const centroValue = item["CENTRO"];
+        const centroValue = item['CENTRO'];
         const distanceData = distances.find(
-          (d) => d.code === String(centroValue)
+          (d) => d.code === String(centroValue),
         )?.distances;
 
         return {
@@ -113,13 +119,30 @@ const ExcelProcessor = ({ city }: { city: string|null }) => {
           Distantzia: distanceData?.distance,
         };
       });
-
+      setTableFilters(
+        Object.keys(processedData[0])
+          .filter((key) => key !== 'key')
+          .reduce((acc,k) => {
+            acc[k]={
+              placeholder: k,
+              options: processedData
+                .map((item) => item[k])
+                .filter(onlyUnique)
+                .sort()
+                .map((item) => ({
+                  text: String(item),
+                  value: String(item),
+                })),
+            };
+            return acc;
+          }, {}),
+      );
       setTableData(processedData);
     } catch (error) {
       message.error(
         `Arazoren bat egon da excel fitxategia prozesatzerakoan: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     } finally {
       setLoading(false);
@@ -128,37 +151,37 @@ const ExcelProcessor = ({ city }: { city: string|null }) => {
 
   const handleDownloadSelected = () => {
     if (selectedRowKeys.length === 0) {
-      message.warning("Ez dago errenkadarik hautatuta deskargatzeko.");
+      message.warning('Ez dago errenkadarik hautatuta deskargatzeko.');
       return;
     }
     const selectedRows = tableData.filter((row) =>
-      selectedRowKeys.includes(row.key||'doesnotincludethis')
+      selectedRowKeys.includes(row.key || 'doesnotincludethis'),
     );
 
     if (selectedRows.length === 0) {
-      message.error("Errore bat gertatu da hautatutako errenkadak iragaztean.");
+      message.error('Errore bat gertatu da hautatutako errenkadak iragaztean.');
       return;
     }
 
     const ws = XLSX.utils.json_to_sheet(selectedRows);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "SelectedData");
+    XLSX.utils.book_append_sheet(wb, ws, 'SelectedData');
 
-    XLSX.writeFile(wb, "aukeratutako-plazak.xlsx");
-    message.success("Hautatutako errenkadak ondo deskargatu dira.");
+    XLSX.writeFile(wb, 'aukeratutako-plazak.xlsx');
+    message.success('Hautatutako errenkadak ondo deskargatu dira.');
   };
 
   const uploaderProps = {
-    name: "file",
-    accept: ".xlsx, .xls",
+    name: 'file',
+    accept: '.xlsx, .xls',
     beforeUpload: () => false,
     onChange: (info: UploadChangeParam) => {
-      console.log("info.file", info.file);
+      console.log('info.file', info.file);
       if (info.file) {
         handleFileSelected(info.file as UploadFile);
       } else {
         message.error(
-          `${info.file} fitxategiarekin arazoren bat egon da, saiatu berriro.`
+          `${info.file} fitxategiarekin arazoren bat egon da, saiatu berriro.`,
         );
       }
     },
@@ -184,24 +207,30 @@ const ExcelProcessor = ({ city }: { city: string|null }) => {
       ...item,
       ...row,
     });
+    if (row.aukeratutakoOrdena && row.aukeratutakoOrdena !== '') {
+      setSelectedRowKeys((prev)=>[...prev, row.key]);
+    }else if(row.aukeratutakoOrdena === ''){
+      setSelectedRowKeys((prev)=>prev.filter((key)=>key!==row.key));
+    }
     setTableData(newData);
   };
   const dynamicSelectedColumn: EditableColumnType = useMemo(() => {
     return {
-      key: "aukeratutakoOrdena",
-      title: "Aukeraketa Ordena",
-      dataIndex: "aukeratutakoOrdena",
-      fixed: "left",
+      key: 'aukeratutakoOrdena',
+      title: 'Aukeraketa Ordena',
+      dataIndex: 'aukeratutakoOrdena',
+      fixed: 'left',
       onCell: (record: TableRow) => ({
         record,
         editable: true,
-        dataIndex: "aukeratutakoOrdena",
-        title: "Aukeraketa Ordena",
+        key: 'aukeratutakoOrdena',
+        dataIndex: 'aukeratutakoOrdena',
+        title: 'Aukeraketa Ordena',
         handleSave,
       }),
       sorter: (a, b) => {
-        const aDist = parseFloat(a["aukeratutakoOrdena"]?.toString() ?? "9999");
-        const bDist = parseFloat(b["aukeratutakoOrdena"]?.toString() ?? "9999");
+        const aDist = parseFloat(a['aukeratutakoOrdena']?.toString() ?? '9999');
+        const bDist = parseFloat(b['aukeratutakoOrdena']?.toString() ?? '9999');
         return aDist - bDist;
       },
     };
@@ -225,6 +254,8 @@ const ExcelProcessor = ({ city }: { city: string|null }) => {
         </Button>
       </Upload>
       <Button
+        icon={<DownloadOutlined />}
+        type='primary'
         onClick={handleDownloadSelected}
         style={{ marginLeft: '10px' }}
         disabled={selectedRowKeys.length === 0}
