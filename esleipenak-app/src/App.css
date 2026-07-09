@@ -1,4 +1,30 @@
-:root {
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.responsive-select {
+  min-width: 200px;
+}
+
+@media (max-width: 768px) {
+  .responsive-select, .responsive-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .action-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .action-button {
+    width: 100%;
+    margin-left: 0 !important;
+  }
+}
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -21,4 +47,37 @@ p {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-gap: 3rem;
+}
+
+@media (max-width: 768px) {
+  .maps-container {
+    grid-template-columns: 1fr;
+    grid-gap: 1rem;
+  }
+  .map-container h2 {
+    font-size: 1.5rem;
+  }
+  .map-container p {
+    font-size: 1rem;
+  }
+  .leaflet-container {
+    height: 400px !important;
+  }
+}
+
+.responsive-container {
+  max-width: 50%;
+  margin: 0 auto;
+}
+
+@media (max-width: 1024px) {
+  .responsive-container {
+    max-width: 80%;
+  }
+}
+
+@media (max-width: 768px) {
+  .responsive-container {
+    max-width: 100%;
+  }
 }

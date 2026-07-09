@@ -33,12 +33,7 @@ function App() {
       title: 'Azalpen laburra',
       content: (
         <>
-          <div
-            style={{
-              maxWidth: '50%',
-              margin: '0 auto',
-            }}
-          >
+          <div className="responsive-container">
             <h2>Azalpen laburra</h2>
             <p>
               Tresna hau ordezko lanetan aritzen diren irakasleei zuzenduta
@@ -171,11 +166,13 @@ function App() {
               .sort((a, b) => a.value.localeCompare(b.value))}
             onSelect={(value) => setSelected(value)}
             size="large"
-            style={{ margin: '0 0 25px 0', minWidth: '200px' }}
+            className="responsive-select"
+            style={{ margin: '0 0 25px 0' }}
           />
           <br />
           <Button
             type="primary"
+            className="responsive-button"
             style={{ margin: '0 0 25px 0' }}
             disabled={!selected}
             onClick={() => next()}
@@ -221,7 +218,8 @@ function App() {
           <h1>Esleipenak</h1>
         </Header>
         <Content
-          style={{ padding: '0 50px', minHeight: '95vh', textAlign: 'center' }}
+          className="app-content"
+          style={{ minHeight: '95vh', textAlign: 'center' }}
         >
           <div style={{ margin: '2rem 0 2rem 0' }}>
             {current > 0 && (
@@ -235,7 +233,8 @@ function App() {
             )}
           </div>
           <Steps
-            style={{ maxWidth: '50%', margin: '0 auto' }}
+            className="responsive-container"
+            style={{ margin: '0 auto' }}
             current={current}
             items={items}
           />

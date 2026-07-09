@@ -40,6 +40,7 @@ function onlyUnique(
 const generateTableColumns = (
   data: TableRow[],
   tableFilters: TableFilter,
+  isMobile: boolean = false,
 ): ColumnsType<TableRow> => {
   if (!data || data.length === 0) {
     return [];
@@ -86,11 +87,13 @@ const generateTableColumns = (
                   ? `${(value / 1000).toFixed().toString()} km`
                   : '-'
             : undefined,
-        fixed: lefFixedColumns.includes(key)
-          ? 'left'
-          : key === 'Denbora' || key === 'Distantzia'
-          ? 'right'
-          : undefined,
+        fixed: isMobile 
+          ? undefined 
+          : (lefFixedColumns.includes(key)
+            ? 'left'
+            : key === 'Denbora' || key === 'Distantzia'
+            ? 'right'
+            : undefined),
         sorter:
           key === 'Denbora' || key === 'Distantzia'
             ? (a, b) => {

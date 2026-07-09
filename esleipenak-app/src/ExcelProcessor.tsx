@@ -34,7 +34,17 @@ const ExcelProcessor = ({ city }: { city: string | null }) => {
   const [distances, setDistances] = useState<CityData[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const tableDataRef = useRef<TableRow[]>(tableData);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     if (city) {
       setLoading(true);
@@ -50,12 +60,12 @@ const ExcelProcessor = ({ city }: { city: string | null }) => {
 
   useEffect(() => {
     if (tableData.length > 0) {
-      setTableColumns(generateTableColumns(tableData, tableFilters));
+      setTableColumns(generateTableColumns(tableData, tableFilters, isMobile));
     } else {
       setTableColumns([]);
     }
     tableDataRef.current = tableData;
-  }, [tableData]);
+  }, [tableData, isMobile, tableFilters]);
 
   type ReadExcelFileType = TableRow[];
   type ReadArrayBuffer = Blob & UploadFile;
@@ -231,9 +241,9 @@ const ExcelProcessor = ({ city }: { city: string | null }) => {
   const dynamicSelectedColumn: EditableColumnType = useMemo(() => {
     return {
       key: 'aukeratutakoOrdena',
-      title: 'Aukeraketa Ordena',
+      title: isMobile ? 'Ordena' : 'Aukeraketa Ordena',
       dataIndex: 'aukeratutakoOrdena',
-      fixed: 'left',
+      fixed: isMobile ? undefined : 'left',
       onCell: (record: TableRow) => ({
         record,
         editable: true,
@@ -249,7 +259,7 @@ const ExcelProcessor = ({ city }: { city: string | null }) => {
       },
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedRowKeysSet, tableData]);
+  }, [selectedRowKeysSet, tableData, isMobile]);
 
   const finalColumns = useMemo(() => {
     if (tableColumns.length === 0 && tableData.length === 0) {
@@ -258,24 +268,27 @@ const ExcelProcessor = ({ city }: { city: string | null }) => {
     return [dynamicSelectedColumn, ...tableColumns];
   }, [dynamicSelectedColumn, tableColumns, tableData.length]);
   return (
-    <div>
-      <Upload {...uploaderProps}>
+    <div className="excel-processor-container">
+      <div className="action-buttons">
+        <Upload {...uploaderProps}>
+          <Button
+            type={tableData.length > 0 ? 'default' : 'primary'}
+            icon={<UploadOutlined />}
+            className="action-button"
+          >
+            Aukeratu Excel fitxategi originala
+          </Button>
+        </Upload>
         <Button
-          type={tableData.length > 0 ? 'default' : 'primary'}
-          icon={<UploadOutlined />}
+          icon={<DownloadOutlined />}
+          type="primary"
+          onClick={handleDownloadSelected}
+          className="action-button"
+          disabled={selectedRowKeys.length === 0}
         >
-          Aukeratu Excel fitxategi originala
+          Deskargatu hautatutako errenkadak
         </Button>
-      </Upload>
-      <Button
-        icon={<DownloadOutlined />}
-        type="primary"
-        onClick={handleDownloadSelected}
-        style={{ marginLeft: '10px' }}
-        disabled={selectedRowKeys.length === 0}
-      >
-        Deskargatu hautatutako errenkadak
-      </Button>
+      </div>
 
       <div style={{ marginTop: '20px' }}>
         {loading ? (
