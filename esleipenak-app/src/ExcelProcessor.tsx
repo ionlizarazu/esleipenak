@@ -75,26 +75,33 @@ const ExcelProcessor = ({ city }: { city: string | null }) => {
           const range = XLSX.utils.decode_range(worksheet['!ref'] ?? '');
 
           for (let R = range.s.r; R <= range.e.r; ++R) {
-            const cellAddress = XLSX.utils.encode_cell({ r: R, c: 0 });
-
-            if (
-              worksheet[cellAddress] &&
-              worksheet[cellAddress].v !== undefined &&
-              worksheet[cellAddress].v !== null &&
-              String(worksheet[cellAddress].v).trim() !== ''
-            ) {
+            let filledCells = 0;
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+              const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+              if (
+                worksheet[cellAddress] &&
+                worksheet[cellAddress].v !== undefined &&
+                worksheet[cellAddress].v !== null &&
+                String(worksheet[cellAddress].v).trim() !== ''
+              ) {
+                filledCells++;
+              }
+            }
+            if (filledCells > 5) {
               headerRow = R;
-
               break;
             }
           }
 
-          const newRange = { s: { r: headerRow, c: range.s.c }, e: range.e };
-          worksheet['!ref'] = XLSX.utils.encode_range(newRange);
           const jsonData = XLSX.utils.sheet_to_json(worksheet, {
-            header: headerRow,
+            range: headerRow,
           });
-          resolve(jsonData as ReadExcelFileType);
+
+          const filteredData = (jsonData as ReadExcelFileType).filter(
+            (row) => Object.keys(row).filter((k) => row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== '').length > 5
+          );
+
+          resolve(filteredData);
         } catch (error) {
           reject(error);
         }
@@ -110,6 +117,12 @@ const ExcelProcessor = ({ city }: { city: string | null }) => {
     setLoading(true);
     try {
       const data = await readExcelFile(file);
+      if (data.length === 0) {
+        message.warning('Ez da datu baliozkorik aurkitu excel fitxategian.');
+        setTableData([]);
+        setTableColumns([]);
+        return;
+      }
       const processedData = data.map((item, index) => {
         const centroValue = item['CENTRO'];
         const distanceData = distances.find(
