@@ -1,6 +1,7 @@
 import json
 import requests
 import csv
+import io
 from pyproj import Transformer
 
 OSMR_REQUEST = "http://localhost:5000/route/v1/driving/{orig_lon},{orig_lat};{dest_lon},{dest_lat}?overview=false&alternatives=false&steps=false"
@@ -51,28 +52,72 @@ def utm_to_latlon(easting, northing, utm_zone=30, hemisphere='N', datum='ETRS89'
     lon, lat = transformer.transform(easting, northing)
     return lat, lon
 
+def read_school_rows(path):
+    """Read the school CSV, supporting both the legacy (UTF-8, comma)
+    and current (ISO-8859-1, semicolon) exports from Open Data Euskadi."""
+    with open(path, "rb") as raw_file:
+        raw = raw_file.read()
+
+    for encoding in ("utf-8-sig", "latin-1"):
+        try:
+            text = raw.decode(encoding)
+            break
+        except UnicodeDecodeError:
+            continue
+    else:
+        raise ValueError(f"Could not decode {path}")
+
+    delimiter = ";" if ";" in text.splitlines()[0] else ","
+    return list(csv.DictReader(io.StringIO(text), delimiter=delimiter))
+
+
 def get_all_schools():
     """ open a CSV file  in folder data with schools data in there. Convert the COOR_X and COOR_Y to lat lon using the function in latlon.py and return a list of schools"""
-    with open("data/dirgennouniv.csv", "r") as f:
+    schools = []
+    skipped = []
+    for row in read_school_rows("data/dirgennouniv.csv"):
+        try:
+            easting = float(row['COOR_X'])
+            northing = float(row['COOR_Y'])
+        except (TypeError, ValueError):
+            easting = northing = 0
 
-        reader = csv.DictReader(f)
-
-        schools = []
-        for row in reader:
-            lat, lon = utm_to_latlon(row['COOR_X'], row['COOR_Y'])
-            schools.append({
+        if easting == 0 and northing == 0:
+            # Some schools have no coordinates in the Open Data Euskadi file.
+            # They cannot be placed on the map nor routed to, so skip them and
+            # report them to the app so end users know they are missing.
+            skipped.append({
                 "code": row['CCEN'],
-                "name": f"{row['NOM']} {row['DGENRE']}",
-                "city": row['DMUNIE'],
-                "address": row['DOMI'],
-                "lat": lat,
-                "lon": lon,
-                "tel": row['TEL1']})
+                "name": f"{row['NOM']} {row['DGENRE']}".strip(),
+                "city": row['DMUNIE']})
+            continue
 
+        lat, lon = utm_to_latlon(easting, northing)
+        schools.append({
+            "code": row['CCEN'],
+            "name": f"{row['NOM']} {row['DGENRE']}",
+            "type": row['DGENRE'].strip() or 'BESTE',
+            "typeEs": row['DGENRC'].strip(),
+            "city": row['DMUNIE'],
+            "address": row['DOMI'],
+            "zip": row['CPOS'].strip(),
+            "tel": row['TEL1'],
+            "email": row['EMAIL'].strip(),
+            "web": row['PAGINA'].strip(),
+            "lat": lat,
+            "lon": lon})
 
-        with open('../../esleipenak-app/src/assets/schools.json', 'w') as f:
-            json.dump(schools, f)
-        return schools
+    if skipped:
+        print(
+            f"WARNING: {len(skipped)} school(s) skipped because they have no "
+            f"coordinates: {', '.join(s['code'] for s in skipped)}"
+        )
+
+    with open('../../esleipenak-app/src/assets/schools.json', 'w') as f:
+        json.dump(schools, f)
+    with open('../../esleipenak-app/src/assets/skipped_schools.json', 'w') as f:
+        json.dump(skipped, f)
+    return schools
 
 
 def get_all_cities_in_geojson():
