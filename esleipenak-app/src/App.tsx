@@ -1,33 +1,37 @@
-import { Button, Layout, Select, Steps } from 'antd';
-import unidecode from 'unidecode';
+import { Alert, Button, Layout, Select, Steps } from 'antd';
 import 'leaflet/dist/leaflet.css';
 
 import './App.css';
 import ExcelProcessor from './ExcelProcessor';
-import herriak from './assets/cities.json';
-import schools from './assets/schools.json';
-import { useState } from 'react';
-import { Marker, Popup, MapContainer, TileLayer } from 'react-leaflet';
+import SchoolMap from './SchoolMap';
+import CitiesMap from './CitiesMap';
+import { cityOptions } from './utils';
+import skippedSchools from './assets/skipped_schools.json';
+import { useEffect, useState } from 'react';
 import { Content, Footer, Header } from 'antd/es/layout/layout';
-import L from 'leaflet';
-import icon from 'leaflet/dist/images/marker-icon.png';
 import { ArrowLeftOutlined, GithubOutlined } from '@ant-design/icons';
-function formatString(value: string): string {
-  let formattedValue = value
-    .toLowerCase()
-    .replace(/ /g, '-')
-    .replace(/\//g, '-');
-  formattedValue = unidecode(formattedValue);
-
-  return formattedValue;
-}
 function App() {
   const [selected, setSelected] = useState(null as string | null);
   const [current, setCurrent] = useState(0);
+  const [view, setView] = useState(() => window.location.hash);
 
-  let DefaultIcon = L.icon({
-    iconUrl: icon,
-  });
+  useEffect(() => {
+    const onHashChange = () => setView(window.location.hash);
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [view]);
+
+  const isMapView = view === '#/herriak' || view === '#/ikastetxeak';
+  const openView = (name: string) => {
+    window.location.hash = `#/${name}`;
+  };
+  const closeView = () => {
+    window.location.hash = '';
+  };
   const steps = [
     {
       title: 'Azalpen laburra',
@@ -71,77 +75,54 @@ function App() {
               Probatu dezagun!
             </Button>
           </div>
-          <div className="maps-container">
-            <div className="map-container">
-              <h2>Herrien zerrenda</h2>
+          <div className="map-links">
+            <div>
+              <h3>Herrien zerrenda</h3>
               <p>
                 Mapa honetan daude ikusgai hurrengo orrian aukeragai agertzen
                 diren herriak. Hauek lortzeko Overpass turbo erabili dugu,
-                zehazki <a href="https://overpass-turbo.eu/s/28z5">query hau</a>{' '}
-                erabili dugu.
+                zehazki <a href="https://overpass-turbo.eu/s/28z5">query hau</a>.
               </p>
-              <MapContainer
-                center={[43.0985864, -2.3811024]}
-                zoom={9}
-                scrollWheelZoom={false}
-                style={{ height: '800px' }}
-              >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                {herriak.features.map((h, key) => {
-                  return (
-                    <Marker
-                      key={key}
-                      position={[
-                        h.geometry.coordinates[1],
-                        h.geometry.coordinates[0],
-                      ]}
-                      icon={DefaultIcon}
-                    >
-                      <Popup>{h.properties.name}</Popup>
-                    </Marker>
-                  );
-                })}
-              </MapContainer>
+              <Button onClick={() => openView('herriak')}>
+                Ikusi herrien mapa osoan
+              </Button>
             </div>
-            <div className="map-container">
-              <h2>Ikastetxeen zerrenda</h2>
+            <div>
+              <h3>Ikastetxeen zerrenda</h3>
               <p>
                 Denboren kalkuluak egiteko erabili dugun ikastetxeen
                 informaziotik erauzitako mapa da hau. Hauek lortzeko Open Data
-                Euskadiko datueak erabili dugu, zehazki{' '}
+                Euskadiko datuak erabili ditugu, zehazki{' '}
                 <a href="https://opendata.euskadi.eus/katalogoa/-/unibertsitatez-kanpoko-ikastetxeak/">
-                  helbideko datuak
-                </a>{' '}
-                erabili dugu.
+                  helbideko honetako datuak
+                </a>.
               </p>
-              <MapContainer
-                center={[43.0985864, -2.3811024]}
-                zoom={9}
-                scrollWheelZoom={false}
-                style={{ height: '800px' }}
-              >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              {skippedSchools.length > 0 && (
+                <Alert
+                  type="warning"
+                  showIcon
+                  style={{ margin: '0 0 16px 0', textAlign: 'left' }}
+                  message={`${skippedSchools.length} ikastetxe ez dira mapan agertzen`}
+                  description={
+                    <>
+                      Open Data Euskadiko datuetan ikastetxe hauek ez dute
+                      koordinaturik, eta beraz ezin izan dira mapan kokatu.
+                      Haiengana joateko distantzia eta denbora ez dira
+                      kalkulatzen.
+                      <ul style={{ margin: '8px 0 0 0', paddingLeft: 20 }}>
+                        {skippedSchools.map((school) => (
+                          <li key={school.code}>
+                            {school.name} · {school.city} ({school.code})
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  }
                 />
-                {schools.map((h, key) => {
-                  return (
-                    <Marker
-                      key={key}
-                      position={[h.lat, h.lon]}
-                      icon={DefaultIcon}
-                    >
-                      <Popup>
-                        {h.name}
-                        <br />
-                      </Popup>
-                    </Marker>
-                  );
-                })}
-              </MapContainer>
+              )}
+              <Button onClick={() => openView('ikastetxeak')}>
+                Ikusi ikastetxeen mapa osoan
+              </Button>
             </div>
           </div>
         </>
@@ -156,14 +137,7 @@ function App() {
             placeholder="Aukeratu herria"
             showSearch
             value={selected}
-            options={herriak.features
-              .map((h) => {
-                return {
-                  label: h.properties.name,
-                  value: formatString(h.properties.name),
-                };
-              })
-              .sort((a, b) => a.value.localeCompare(b.value))}
+            options={cityOptions}
             onSelect={(value) => setSelected(value)}
             size="large"
             className="responsive-select"
@@ -203,20 +177,35 @@ function App() {
     setCurrent(current - 1);
   };
   return (
-    <>
-      <Layout>
-        <Header
-          style={{
-            color: '#fff',
-            height: 64,
-            paddingInline: 48,
-            lineHeight: '64px',
-            display: 'flex',
-            alignItems: 'center',
-          }}
-        >
-          <h1>Esleipenak</h1>
-        </Header>
+    <Layout>
+      <Header
+        style={{
+          color: '#fff',
+          height: 64,
+          paddingInline: 48,
+          lineHeight: '64px',
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        <h1>Esleipenak</h1>
+      </Header>
+      {isMapView ? (
+        <Content className="map-view">
+          <Button
+            className="map-back"
+            icon={<ArrowLeftOutlined />}
+            onClick={closeView}
+          >
+            Itzuli
+          </Button>
+          {view === '#/herriak' ? (
+            <CitiesMap />
+          ) : (
+            <SchoolMap city={selected} onCityChange={setSelected} />
+          )}
+        </Content>
+      ) : (
         <Content
           className="app-content"
           style={{ minHeight: '95vh', textAlign: 'center' }}
@@ -240,6 +229,8 @@ function App() {
           />
           <div>{steps[current].content}</div>
         </Content>
+      )}
+      {!isMapView && (
         <Footer
           style={{
             textAlign: 'center',
@@ -269,8 +260,8 @@ function App() {
             Github-eko repositorioa
           </a>
         </Footer>
-      </Layout>
-    </>
+      )}
+    </Layout>
   );
 }
 

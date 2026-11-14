@@ -1,5 +1,28 @@
 import type { ColumnsType } from 'antd/es/table';
+import unidecode from 'unidecode';
+import herriak from './assets/cities.json';
 import type { EditableColumnType, TableFilter, TableRow } from './interfaces';
+
+export function formatString(value: string): string {
+  return unidecode(value.toLowerCase().replace(/ /g, '-').replace(/\//g, '-'));
+}
+
+// Duplicate city names share a slug: keep the last one, which is the
+// occurrence whose distance file is generated last (and thus kept on disk).
+export const cityPoints = new Map<string, { name: string; lat: number; lon: number }>(
+  herriak.features.map((feature): [string, { name: string; lat: number; lon: number }] => [
+    formatString(feature.properties.name),
+    {
+      name: feature.properties.name,
+      lat: feature.geometry.coordinates[1],
+      lon: feature.geometry.coordinates[0],
+    },
+  ]),
+);
+
+export const cityOptions = [...cityPoints.entries()]
+  .map(([value, city]) => ({ label: city.name, value }))
+  .sort((a, b) => a.label.localeCompare(b.label));
 
 export interface CityData {
   code: string;
