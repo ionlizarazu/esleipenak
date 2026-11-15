@@ -1,4 +1,4 @@
-import { Alert, Button, Layout, Select, Steps } from 'antd';
+import { Button, Layout, Popover, Select, Steps } from 'antd';
 import 'leaflet/dist/leaflet.css';
 
 import './App.css';
@@ -26,9 +26,6 @@ function App() {
   }, [view]);
 
   const isMapView = view === '#/herriak' || view === '#/ikastetxeak';
-  const openView = (name: string) => {
-    window.location.hash = `#/${name}`;
-  };
   const closeView = () => {
     window.location.hash = '';
   };
@@ -74,56 +71,6 @@ function App() {
             >
               Probatu dezagun!
             </Button>
-          </div>
-          <div className="map-links">
-            <div>
-              <h3>Herrien zerrenda</h3>
-              <p>
-                Mapa honetan daude ikusgai hurrengo orrian aukeragai agertzen
-                diren herriak. Hauek lortzeko Overpass turbo erabili dugu,
-                zehazki <a href="https://overpass-turbo.eu/s/28z5">query hau</a>.
-              </p>
-              <Button onClick={() => openView('herriak')}>
-                Ikusi herrien mapa osoan
-              </Button>
-            </div>
-            <div>
-              <h3>Ikastetxeen zerrenda</h3>
-              <p>
-                Denboren kalkuluak egiteko erabili dugun ikastetxeen
-                informaziotik erauzitako mapa da hau. Hauek lortzeko Open Data
-                Euskadiko datuak erabili ditugu, zehazki{' '}
-                <a href="https://opendata.euskadi.eus/katalogoa/-/unibertsitatez-kanpoko-ikastetxeak/">
-                  helbideko honetako datuak
-                </a>.
-              </p>
-              {skippedSchools.length > 0 && (
-                <Alert
-                  type="warning"
-                  showIcon
-                  style={{ margin: '0 0 16px 0', textAlign: 'left' }}
-                  message={`${skippedSchools.length} ikastetxe ez dira mapan agertzen`}
-                  description={
-                    <>
-                      Open Data Euskadiko datuetan ikastetxe hauek ez dute
-                      koordinaturik, eta beraz ezin izan dira mapan kokatu.
-                      Haiengana joateko distantzia eta denbora ez dira
-                      kalkulatzen.
-                      <ul style={{ margin: '8px 0 0 0', paddingLeft: 20 }}>
-                        {skippedSchools.map((school) => (
-                          <li key={school.code}>
-                            {school.name} · {school.city} ({school.code})
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  }
-                />
-              )}
-              <Button onClick={() => openView('ikastetxeak')}>
-                Ikusi ikastetxeen mapa osoan
-              </Button>
-            </div>
           </div>
         </>
       ),
@@ -179,19 +126,91 @@ function App() {
   return (
     <Layout>
       <Header
+        className="app-header"
         style={{
           color: '#fff',
           height: 64,
-          paddingInline: 48,
           lineHeight: '64px',
           display: 'flex',
           alignItems: 'center',
         }}
       >
-        <h1>Esleipenak</h1>
+        <h1 className="header-title">
+          <button type="button" className="header-brand" onClick={closeView}>
+            Esleipenak
+          </button>
+        </h1>
+        <nav className="header-nav" aria-label="Mapak">
+          <a
+            href="#/herriak"
+            className={view === '#/herriak' ? 'active' : undefined}
+            aria-current={view === '#/herriak' ? 'page' : undefined}
+          >
+            Herriak
+          </a>
+          <a
+            href="#/ikastetxeak"
+            className={view === '#/ikastetxeak' ? 'active' : undefined}
+            aria-current={view === '#/ikastetxeak' ? 'page' : undefined}
+          >
+            Ikastetxeak
+          </a>
+        </nav>
       </Header>
       {isMapView ? (
         <Content className="map-view">
+          <div className="map-intro">
+            {view === '#/herriak' ? (
+              <>
+                <h2>Herrien mapa</h2>
+                <p>
+                  Mapa honetan ikusgai daude esleipenerako aukeragai diren
+                  herriak. Hauek lortzeko Overpass turbo erabili dugu, zehazki{' '}
+                  <a href="https://overpass-turbo.eu/s/28z5">query hau</a>.
+                </p>
+              </>
+            ) : (
+              <>
+                <h2>Ikastetxeen mapa</h2>
+                <p>
+                  Denboren kalkuluak egiteko erabili dugun ikastetxeen
+                  informaziotik erauzitako mapa da hau. Hauek lortzeko Open Data
+                  Euskadiko datuak erabili ditugu, zehazki{' '}
+                  <a href="https://opendata.euskadi.eus/katalogoa/-/unibertsitatez-kanpoko-ikastetxeak/">
+                    helbideko honetako datuak
+                  </a>.
+                </p>
+                {skippedSchools.length > 0 && (
+                  <Popover
+                    trigger="click"
+                    placement="bottomLeft"
+                    title="Mapan kokatu ez diren ikastetxeak"
+                    content={
+                      <div className="skipped-schools">
+                        <p>
+                          Open Data Euskadiko datuetan ikastetxe hauek ez dute
+                          koordinaturik, eta beraz ezin izan dira mapan kokatu.
+                          Haiengana joateko distantzia eta denbora ez dira
+                          kalkulatzen.
+                        </p>
+                        <ul>
+                          {skippedSchools.map((school) => (
+                            <li key={school.code}>
+                              {school.name} · {school.city} ({school.code})
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    }
+                  >
+                    <Button type="link" style={{ padding: 0, color: '#d46b08' }}>
+                      {skippedSchools.length} ikastetxe ez dira mapan agertzen
+                    </Button>
+                  </Popover>
+                )}
+              </>
+            )}
+          </div>
           <Button
             className="map-back"
             icon={<ArrowLeftOutlined />}
