@@ -3,7 +3,12 @@ import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import herriak from './assets/cities.json';
 
-const defaultIcon = L.icon({ iconUrl: icon });
+const defaultIcon = L.icon({
+  iconUrl: icon,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+});
 
 function CitiesMap() {
   return (

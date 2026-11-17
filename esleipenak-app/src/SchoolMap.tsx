@@ -29,12 +29,17 @@ const typeOptions = [...new Set(schools.map((school) => school.type))]
     };
   })
   .sort((a, b) => a.label.localeCompare(b.label));
-const defaultIcon = L.icon({ iconUrl: icon });
+const defaultIcon = L.icon({
+  iconUrl: icon,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+});
 const originIcon = L.divIcon({
   className: 'origin-marker',
   html: '<span></span>',
   iconSize: [24, 24],
-  iconAnchor: [12, 24],
+  iconAnchor: [12, 29],
 });
 
 const webUrl = (web: string) => {
